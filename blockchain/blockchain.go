@@ -4,16 +4,19 @@ import (
 	"blockchain/block"
 )
 
+// Blockchain struct
 type Blockchain struct {
-	blocks []*block.Block
+	Blocks []*block.Block
 }
 
+// AddBlock method to add a block to blockchain
 func (bc *Blockchain) AddBlock(data string) {
-	prevBlock := bc.blocks[len(bc.blocks)-1]
+	prevBlock := bc.Blocks[len(bc.Blocks)-1]
 	newBlock := block.NewBlock(data, prevBlock.Hash)
-	bc.blocks = append(bc.blocks, newBlock)
+	bc.Blocks = append(bc.Blocks, newBlock)
 }
 
+// NewBlockchain create a new blockchain
 func NewBlockchain() *Blockchain {
-	return &Blockchain{[]*block.Block{block.GenesisBlock()}}
+	return &Blockchain{[]*block.Block{block.NewGenesisBlock()}}
 }
