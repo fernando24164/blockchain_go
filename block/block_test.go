@@ -13,8 +13,20 @@ func TestConstructor(t *testing.T) {
 }
 
 func TestGenesis(t *testing.T) {
-	bigBang := block.GenesisBlock()
+	bigBang := block.NewGenesisBlock()
 	if bigBang == nil {
+		t.Fail()
+	}
+}
+
+func TestSerialize(t *testing.T) {
+	bloc := block.NewBlock("test", []byte("test"))
+	data := bloc.Serialize()
+	if data == nil {
+		t.Fail()
+	}
+	blockDes := block.DeserializeBlock(data)
+	if len(blockDes.Data) != len([]byte("test")) {
 		t.Fail()
 	}
 }
