@@ -12,14 +12,47 @@ const blocksBucket = "blocks"
 // Blockchain struct
 type Blockchain struct {
 	tip []byte
-	db  *bolt.DB
+	Db  *bolt.DB
+}
+
+type BlockchainIterator struct {
+	currentHash []byte
+	db          *bolt.DB
+}
+
+// Iterator constructor to return and Iterator object
+func (bc *Blockchain) Iterator() *BlockchainIterator {
+	bci := &BlockchainIterator{bc.tip, bc.Db}
+
+	return bci
+}
+
+// Next method to return next block in blockchain
+func (bi *BlockchainIterator) Next() *block.Block {
+	var returnedBlock *block.Block
+
+	error := bi.db.View(func(tx *bolt.Tx) error {
+		bucket := tx.Bucket([]byte(blocksBucket))
+		blockData := bucket.Get(bi.currentHash)
+		returnedBlock = block.DeserializeBlock(blockData)
+
+		return nil
+	})
+
+	if error != nil {
+		panic("Error retrieving the next block")
+	}
+
+	bi.currentHash = returnedBlock.PrevBlockHash
+
+	return returnedBlock
 }
 
 // AddBlock method to add a block to blockchain
 func (bc *Blockchain) AddBlock(data string) {
 	var lastHash []byte
 
-	err := bc.db.View(func(tx *bolt.Tx) error {
+	err := bc.Db.View(func(tx *bolt.Tx) error {
 		bucket := tx.Bucket([]byte(blocksBucket))
 		lastHash = bucket.Get([]byte("l"))
 
@@ -32,7 +65,7 @@ func (bc *Blockchain) AddBlock(data string) {
 
 	newBlock := block.NewBlock(data, lastHash)
 
-	_ = bc.db.Update(func(tx *bolt.Tx) error {
+	_ = bc.Db.Update(func(tx *bolt.Tx) error {
 		bucket := tx.Bucket([]byte(blocksBucket))
 		err := bucket.Put(newBlock.Hash, newBlock.Serialize())
 		err = bucket.Put([]byte("l"), newBlock.Hash)
